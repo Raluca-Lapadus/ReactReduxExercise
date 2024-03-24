@@ -4,9 +4,8 @@ import { User } from "../pages/types";
 const initialState: {
   users: User[];
   loading: boolean;
-  error: string | null;
   searchQuery: number | null;
-} = { users: [], loading: false, error: null, searchQuery: null };
+} = { users: [], loading: false, searchQuery: null };
 
 const usersSlice = createSlice({
   name: "users",
@@ -15,25 +14,44 @@ const usersSlice = createSlice({
     fetchUsersStart: (state) => {
       state.users = [];
       state.loading = true;
-      state.error = null;
     },
     saveUserData: (state, action: PayloadAction<User[]>) => {
       state.loading = false;
       state.users = action.payload;
     },
-    fetchUsersFailure: (state, action: PayloadAction<string>) => {
+    fetchUsersFailure: (state) => {
       state.loading = false;
-      state.error = action.payload;
     },
     setSearchQuery: (state, action: PayloadAction<number | null>) => {
-      console.log(action.payload);
       state.searchQuery = action.payload;
     },
   },
 });
 
+interface InfoState {
+  info: string | null;
+}
+
+const initialInfoState: InfoState = {
+  info: null,
+};
+
+const bannerSlice = createSlice({
+  name: "banner",
+  initialState: initialInfoState,
+  reducers: {
+    setInfo: (state, action: PayloadAction<string | null>) => {
+      state.info = action.payload;
+    },
+    clearInfo: (state) => {
+      state.info = null;
+    },
+  },
+});
+
 export const store = configureStore({
-  reducer: usersSlice.reducer,
+  reducer: { users: usersSlice.reducer, banner: bannerSlice.reducer },
 });
 
 export const usersActions = usersSlice.actions;
+export const infoBannerActions = bannerSlice.actions;

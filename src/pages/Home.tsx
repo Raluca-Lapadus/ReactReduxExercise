@@ -3,7 +3,7 @@ import { Input } from "../components/Input/Input";
 import { ContainerCards, PageWrapper } from "./styles";
 import { fetchUsers } from "../api/api";
 import { useDispatch, useSelector } from "react-redux";
-import { usersActions } from "../store/store";
+import { infoBannerActions, usersActions } from "../store/store";
 import SlideShow from "../components/SlideShow/SlideShow";
 import { useDebounce } from "../hooks/useDebounce";
 import { Banner } from "../components/Banner/Banner";
@@ -11,12 +11,16 @@ import { Loader } from "../components/Loader/Loader";
 
 export const Home = () => {
   const dispatch = useDispatch();
-  const users = useSelector((state: any) => state.users);
-  const loading = useSelector((state: any) => state.loading);
-  const error = useSelector((state: any) => state.error);
-  const searchQuery = useSelector((state: any) => state.searchQuery);
-  const [inputError, setInputError] = useState<boolean>(false);
+
+  const users = useSelector((state: any) => state.users.users);
+  const loading = useSelector((state: any) => state.users.loading);
+  const searchQuery = useSelector((state: any) => state.users.searchQuery);
+
+  const infoMessage = useSelector((state: any) => state.banner.info);
+
   const debouncedSearchTerm = useDebounce(searchQuery || 0, 600);
+
+  const [inputError, setInputError] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -25,7 +29,8 @@ export const Home = () => {
         const data = await fetchUsers(debouncedSearchTerm);
         dispatch(usersActions.saveUserData(data));
       } catch (error: any) {
-        dispatch(usersActions.fetchUsersFailure(error.message));
+        const errorMessage = error.message
+        dispatch(infoBannerActions.setInfo(errorMessage));
       }
     };
 
@@ -39,20 +44,21 @@ export const Home = () => {
     if (!isNaN(value)) {
       dispatch(usersActions.setSearchQuery(value));
       setInputError(false);
+      dispatch(infoBannerActions.clearInfo());
     } else {
       setInputError(true);
+      dispatch(infoBannerActions.setInfo("Enter valid number please."));
     }
   };
 
   return (
     <PageWrapper>
-      <p>Provide a number: </p><Input onChange={handleInputChange} error={inputError.toString()} />
-      {inputError && <Banner errorMessage={'Enter valid number please.'} />}
+      <p>Provide a number: </p>
+      <Input onChange={handleInputChange} error={inputError.toString()} />
       {loading && <Loader />}
-      {error && <Banner errorMessage={error} />}
-
+      {infoMessage && <Banner errorMessage={infoMessage} />}
       <ContainerCards>
-          {users.length > 0 && <SlideShow users={users} />}
+        {users.length > 0 && <SlideShow users={users} />}
       </ContainerCards>
     </PageWrapper>
   );
